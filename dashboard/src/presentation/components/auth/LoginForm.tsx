@@ -58,8 +58,10 @@ export default function LoginForm({ onSuccess, onBack }: Props) {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="p-3 border rounded-xl text-sm focus:ring-2 focus:ring-rose-500"
-              placeholder="admin@emerred.co"
+
+              className="p-3 border rounded-lg"
+              placeholder="tu@email.com"
+
             />
           </label>
           <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
@@ -82,12 +84,6 @@ export default function LoginForm({ onSuccess, onBack }: Props) {
             {loading ? 'Verificando credenciales...' : 'Ingresar al Panel de Mando'}
           </button>
         </form>
-
-        <div className="mt-6 pt-4 border-t border-slate-100 text-center">
-          <p className="text-xs text-slate-400">
-            Acceso de prueba: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-700 font-mono">admin@emerred.co</code> / <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-700 font-mono">admin123</code>
-          </p>
-        </div>
       </div>
     </div>
   );
