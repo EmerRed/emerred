@@ -89,6 +89,16 @@ Ver [`agente/README.md`](agente/README.md) para instalación y uso del CLI.
 | `GET` | `/auth/me` | Usuario actual | JWT |
 | `POST` | `/auth/refresh` | Renovar token | JWT |
 
+### Alarma de emergencia
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| `POST` | `/alarma/activar` | Difunde la alarma por WebSocket a dispositivos conectados | Admin/Operator |
+| `GET` | `/alarma/dispositivos` | Cantidad de dispositivos conectados al canal | Admin/Operator |
+| `WS` | `/alarma` | Canal WebSocket para apps móviles | — |
+
+`POST /alarma/activar` no es WebSocket: es un endpoint REST que envía `{"alarma": true}` a **todos** los clientes conectados en `wss://<host>/alarma`. No filtra por ubicación ni radio geográfico.
+
 ### Otros
 
 | Método | Ruta | Descripción |

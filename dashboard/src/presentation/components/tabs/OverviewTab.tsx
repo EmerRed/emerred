@@ -1,4 +1,4 @@
-import { Users, Wifi, Signal, Activity } from 'lucide-react';
+import { Users, Wifi, Signal, MapPin } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -42,7 +42,7 @@ export default function OverviewTab({ data }: Props) {
         <StatCard icon={Users} value={stats.total} label="Afectados totales" />
         <StatCard icon={Wifi} value={stats.conMesh} label="Con conexión mesh" />
         <StatCard icon={Signal} value={stats.muyBaja} label="Señal muy baja" variant="urgent" />
-        <StatCard icon={Activity} value={data.alerts.length} label="Alertas activas" />
+        <StatCard icon={MapPin} value={data.puntos.length} label="Ubicaciones agrupadas" />
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">

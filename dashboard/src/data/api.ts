@@ -1,29 +1,25 @@
 import { getAuthToken } from './auth';
-import type { Afectado, ActiveAlert } from '@/domain/types';
+import type { Afectado } from '@/domain/types';
 
 export const API_BASE = import.meta.env.VITE_API_URL || 'https://emerred-production.up.railway.app';
 
-let MOCK_ALERTS: ActiveAlert[] = [
-  {
-    id: 'alert-1',
-    active: true,
-    tipo: 'inundacion',
-    mensaje: 'Riesgo de inundación en el centro. Evacuar a zonas altas.',
-    ciudad: 'Bogotá',
-    radio: 5000,
-  },
-];
+export interface AlarmaResult {
+  dispositivosAlcanzados: number;
+  timestamp: string;
+}
+
+function authHeaders(): HeadersInit {
+  const token = getAuthToken();
+  return {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 export async function getAfectados(): Promise<Afectado[]> {
-  const token = getAuthToken();
   try {
-    const res = await fetch(`${API_BASE}/afectados`, {
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    const res = await fetch(`${API_BASE}/afectados`, { headers: authHeaders() });
     const json = await res.json();
     return Array.isArray(json.data) ? json.data : [];
   } catch {
@@ -31,17 +27,30 @@ export async function getAfectados(): Promise<Afectado[]> {
   }
 }
 
-export async function getActiveAlerts(): Promise<ActiveAlert[]> {
-  return new Promise(resolve => setTimeout(() => resolve(MOCK_ALERTS.filter(a => a.active)), 300));
+/** Dispositivos móviles conectados al canal WebSocket wss://<host>/alarma */
+export async function getDispositivosAlarma(): Promise<number> {
+  try {
+    const res = await fetch(`${API_BASE}/alarma/dispositivos`, { headers: authHeaders() });
+    const json = await res.json();
+    if (!res.ok || !json.success) return 0;
+    return json.data?.dispositivosConectados ?? 0;
+  } catch {
+    return 0;
+  }
 }
 
-export async function broadcastAlert(alert: Omit<ActiveAlert, 'id'>): Promise<void> {
-  MOCK_ALERTS.push({
-    id: `alert-${Date.now()}`,
-    active: true,
-    tipo: alert.tipo,
-    mensaje: alert.mensaje,
-    ciudad: alert.ciudad ?? 'Bogotá',
-    radio: alert.radio,
+/**
+ * Activa la alarma de emergencia. El backend difunde {"alarma": true} por WebSocket
+ * a todos los dispositivos conectados en /alarma (no hay filtro geográfico).
+ */
+export async function activarAlarma(): Promise<AlarmaResult> {
+  const res = await fetch(`${API_BASE}/alarma/activar`, {
+    method: 'POST',
+    headers: authHeaders(),
   });
+  const json = await res.json().catch(() => ({ success: false, message: 'Respuesta no válida' }));
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || 'Error al activar la alarma');
+  }
+  return json.data;
 }
