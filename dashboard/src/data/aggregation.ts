@@ -10,7 +10,7 @@ export function aggregateByLocation(afectados: Afectado[]): PuntoAfectado[] {
     groups.set(key, list);
   }
 
-  return Array.from(groups.values()).map(list => {
+  return Array.from(groups.entries()).map(([key, list]) => {
     const lat = list[0].lat;
     const long = list[0].long;
     const conteo = list.length;
@@ -19,7 +19,7 @@ export function aggregateByLocation(afectados: Afectado[]): PuntoAfectado[] {
     const conMesh = list.filter(a => a.coneccion_mesh).length;
 
     return {
-      id: list.map(a => a.id).join('-'),
+      id: key,
       lat,
       long,
       conteo,

@@ -1,16 +1,20 @@
 import { API_BASE } from './api';
+import type { Afectado } from '@/domain/types';
 
 const EVENT_NAME = 'nuevo-afectado';
 
-export function subscribeToAfectadosUpdates(onUpdate: () => void): () => void {
+export function subscribeToAfectadosUpdates(onUpdate: (afectado: Afectado) => void): () => void {
   const sse = new EventSource(`${API_BASE}/afectados/sse`);
 
-  sse.addEventListener(EVENT_NAME, () => {
-    onUpdate();
+  sse.addEventListener(EVENT_NAME, (event) => {
+    try {
+      const afectado = JSON.parse((event as MessageEvent).data) as Afectado;
+      onUpdate(afectado);
+    } catch {
+      // Ignorar mensajes mal formados
+    }
   });
 
-  // EventSource se reconecta solo por defecto; no cerramos manualmente en error.
-  // Se retorna una funcion de limpieza para cerrar cuando el componente se desmonta.
   return () => {
     sse.close();
   };
