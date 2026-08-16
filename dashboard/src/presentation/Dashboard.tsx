@@ -1,13 +1,15 @@
-import { use, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, LogOut } from 'lucide-react';
 import { broadcastAlert } from '@/data/api';
 import { subscribeToAfectadosUpdates } from '@/data/sse';
-import { getDashboardData, refreshDashboardData } from '@/data/resources';
+import { getDashboardData, refreshDashboardData, appendAfectado, type DashboardData } from '@/data/resources';
 import { useIdleTimeout } from '@/presentation/hooks/useIdleTimeout';
+import SkeletonDashboard from '@/presentation/components/ui/SkeletonDashboard';
 import OverviewTab from '@/presentation/components/tabs/OverviewTab';
 import AlertsTab from '@/presentation/components/tabs/AlertsTab';
 import MapTab from '@/presentation/components/tabs/MapTab';
 import ReportsTab from '@/presentation/components/tabs/ReportsTab';
+import type { Afectado } from '@/domain/types';
 
 const TABS = [
   { id: 'overview', label: 'Resumen' },
@@ -23,21 +25,33 @@ interface Props {
 export default function Dashboard({ onLogout }: Props) {
   useIdleTimeout();
 
-  const [dataPromise, setDataPromise] = useState(() => getDashboardData());
-  const data = use(dataPromise);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('overview');
 
   useEffect(() => {
-    return subscribeToAfectadosUpdates(() => {
-      setDataPromise(refreshDashboardData());
+    let mounted = true;
+    getDashboardData().then(initial => {
+      if (mounted) setData(initial);
+    });
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    return subscribeToAfectadosUpdates((afectado: Afectado) => {
+      setData(prev => (prev ? appendAfectado(prev, afectado) : prev));
     });
   }, []);
-  const [activeTab, setActiveTab] = useState<string>('overview');
+
+  if (!data) {
+    return <SkeletonDashboard />;
+  }
 
   const city = data.alerts[0]?.ciudad ?? 'Bogotá';
 
   async function handleBroadcast(tipo: string, mensaje: string) {
     await broadcastAlert({ active: true, tipo, mensaje, ciudad: city, radio: 5000 });
-    setDataPromise(refreshDashboardData());
+    const fresh = await refreshDashboardData();
+    setData(fresh);
   }
 
   return (
