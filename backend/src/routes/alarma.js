@@ -42,13 +42,21 @@ const { broadcastAlarma, clientCount } = require('../config/alarma');
  *         description: Error interno del servidor
  */
 router.post('/activar', auth, requireRole('admin', 'operator'), (req, res) => {
-  const alcanzados = broadcastAlarma(req.user.email);
+  const { tipo, mensaje } = req.body || {};
+  const alcanzados = broadcastAlarma(req.user.email, { tipo, mensaje });
   console.log(`🚨 ALARMA activada por ${req.user.email} → ${alcanzados} dispositivo(s)`);
+
+  const conectados = clientCount();
+  const message = alcanzados > 0
+    ? 'Alarma activada y difundida a los dispositivos conectados'
+    : 'Alarma registrada, pero ningún dispositivo móvil estaba conectado al canal WebSocket /alarma';
+
   res.json({
     success: true,
-    message: 'Alarma activada y difundida a los dispositivos conectados',
+    message,
     data: {
       dispositivosAlcanzados: alcanzados,
+      dispositivosConectados: conectados,
       timestamp: new Date().toISOString(),
     },
   });

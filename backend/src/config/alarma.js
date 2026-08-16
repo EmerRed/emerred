@@ -1,10 +1,22 @@
-const { WebSocketServer } = require('ws');
+const { WebSocket, WebSocketServer } = require('ws');
 
 const WS_PATH = '/alarma';
 const HEARTBEAT_INTERVAL_MS = 30000;
 
 const wss = new WebSocketServer({ noServer: true });
 const clients = new Set();
+
+function isOpen(ws) {
+  return ws.readyState === WebSocket.OPEN;
+}
+
+function pruneDeadClients() {
+  clients.forEach((ws) => {
+    if (!isOpen(ws)) {
+      clients.delete(ws);
+    }
+  });
+}
 
 wss.on('connection', (ws) => {
   ws.isAlive = true;
@@ -23,15 +35,25 @@ wss.on('connection', (ws) => {
   ws.on('error', () => {
     clients.delete(ws);
   });
+
+  // Confirma al cliente que el canal quedó activo (útil para diagnóstico).
+  if (isOpen(ws)) {
+    try {
+      ws.send(JSON.stringify({ tipo: 'conectado', canal: WS_PATH, timestamp: new Date().toISOString() }));
+    } catch (_) {
+      clients.delete(ws);
+    }
+  }
 });
 
-// Los proxies (Railway) cierran conexiones idle; el ping mantiene el canal
-// vivo y permite purgar sockets que ya no responden.
 const heartbeat = setInterval(() => {
   clients.forEach((ws) => {
     if (!ws.isAlive) {
       clients.delete(ws);
-      return ws.terminate();
+      try {
+        ws.terminate();
+      } catch (_) {}
+      return;
     }
     ws.isAlive = false;
     try {
@@ -42,11 +64,6 @@ const heartbeat = setInterval(() => {
   });
 }, HEARTBEAT_INTERVAL_MS);
 
-/**
- * Adjunta el canal de alarma a un servidor HTTP existente.
- * Solo se aceptan upgrades cuyo path sea exactamente WS_PATH; el resto
- * se rechaza destruyendo el socket (Express no maneja upgrades).
- */
 function attachAlarmChannel(server) {
   server.on('upgrade', (req, socket, head) => {
     let pathname;
@@ -66,32 +83,39 @@ function attachAlarmChannel(server) {
   });
 }
 
-/** Difunde la señal de alarma a todos los dispositivos conectados. */
-function broadcastAlarma(activadoPor) {
+function broadcastAlarma(activadoPor, metadata = {}) {
+  pruneDeadClients();
+
   const payload = JSON.stringify({
     alarma: true,
     timestamp: new Date().toISOString(),
     activadoPor: activadoPor || undefined,
+    tipo: metadata.tipo || undefined,
+    mensaje: metadata.mensaje || undefined,
   });
+
   let alcanzados = 0;
   clients.forEach((ws) => {
-    if (ws.readyState === ws.OPEN) {
-      try {
-        ws.send(payload);
-        alcanzados += 1;
-      } catch (_) {
-        clients.delete(ws);
-      }
+    if (!isOpen(ws)) {
+      clients.delete(ws);
+      return;
+    }
+    try {
+      ws.send(payload);
+      alcanzados += 1;
+    } catch (_) {
+      clients.delete(ws);
     }
   });
+
   return alcanzados;
 }
 
 function clientCount() {
+  pruneDeadClients();
   return clients.size;
 }
 
-/** Cierra el canal y todos sus sockets (graceful shutdown). */
 function closeAlarmChannel() {
   clearInterval(heartbeat);
   clients.forEach((ws) => {

@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import { ArrowLeft, Lock } from 'lucide-react';
 import { login } from '@/data/auth';
 
 interface Props {
   onSuccess: () => void;
-  onBack?: () => void;
 }
 
-export default function LoginForm({ onSuccess, onBack }: Props) {
+export default function LoginForm({ onSuccess }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -28,60 +26,40 @@ export default function LoginForm({ onSuccess, onBack }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
-        {onBack && (
-          <button
-            onClick={onBack}
-            className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-rose-600 mb-6 transition"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Volver al Portal de Ayuda Cali</span>
-          </button>
-        )}
-
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center">
-            <Lock className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">EmerRed PMU Operadores</h1>
-            <p className="text-xs text-slate-500">Acceso exclusivo a la consola de mando</p>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-6">
-          <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
-            Correo Institucional / Operador
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+        <h1 className="text-2xl font-bold text-rose-600 mb-2">Emerred Admin</h1>
+        <p className="text-slate-500 mb-6">Iniciar sesión como operador</p>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1 text-sm font-semibold">
+            Email
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-
               className="p-3 border rounded-lg"
               placeholder="tu@email.com"
-
             />
           </label>
-          <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
-            Contraseña de Seguridad
+          <label className="flex flex-col gap-1 text-sm font-semibold">
+            Contraseña
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              className="p-3 border rounded-xl text-sm focus:ring-2 focus:ring-rose-500"
+              className="p-3 border rounded-lg"
               placeholder="••••••••"
             />
           </label>
-          {error && <p className="text-red-600 text-xs font-semibold">{error}</p>}
+          {error && <p className="text-red-600 text-sm">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition text-sm shadow-md"
+            className="bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition"
           >
-            {loading ? 'Verificando credenciales...' : 'Ingresar al Panel de Mando'}
+            {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
       </div>

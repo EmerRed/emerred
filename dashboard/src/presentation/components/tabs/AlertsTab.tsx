@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Megaphone, Radio, Smartphone } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Megaphone, Radio, Smartphone, Wifi, WifiOff } from 'lucide-react';
 import type { ActiveAlert } from '@/domain/types';
 import type { AlarmaResult } from '@/data/api';
-import { getDispositivosAlarma } from '@/data/api';
+import { getAlarmaWebSocketUrl, getDispositivosAlarma } from '@/data/api';
 
 interface Props {
   city: string;
@@ -17,32 +17,74 @@ export default function AlertsTab({ city, historial, onActivar }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [ultimoResultado, setUltimoResultado] = useState<AlarmaResult | null>(null);
   const [dispositivosConectados, setDispositivosConectados] = useState<number | null>(null);
+  const [wsProbe, setWsProbe] = useState<'idle' | 'testing' | 'ok' | 'fail'>('idle');
+  const wsUrl = getAlarmaWebSocketUrl();
+
+  const refreshDispositivos = useCallback(async () => {
+    const count = await getDispositivosAlarma();
+    setDispositivosConectados(count);
+    return count;
+  }, []);
 
   useEffect(() => {
     let mounted = true;
-    getDispositivosAlarma().then(count => {
-      if (mounted) setDispositivosConectados(count);
-    });
+    refreshDispositivos();
     const interval = setInterval(() => {
-      getDispositivosAlarma().then(count => {
-        if (mounted) setDispositivosConectados(count);
-      });
-    }, 15000);
+      if (mounted) refreshDispositivos();
+    }, 10000);
     return () => {
       mounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [refreshDispositivos]);
+
+  async function probarCanalWebSocket() {
+    setWsProbe('testing');
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const ws = new WebSocket(wsUrl);
+        const timeout = setTimeout(() => {
+          ws.close();
+          reject(new Error('Tiempo de espera agotado'));
+        }, 8000);
+        ws.onopen = () => {
+          clearTimeout(timeout);
+          ws.close();
+          resolve();
+        };
+        ws.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('No se pudo conectar al canal WebSocket'));
+        };
+      });
+      setWsProbe('ok');
+      await refreshDispositivos();
+    } catch {
+      setWsProbe('fail');
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    const conectados = dispositivosConectados ?? await refreshDispositivos();
+    if (conectados === 0) {
+      const continuar = window.confirm(
+        'No hay dispositivos móviles conectados al canal WebSocket.\n\n' +
+          'La alarma solo llega a apps con EmerRed abierta y el endpoint configurado.\n\n' +
+          '¿Deseás activar la alarma de todos modos?'
+      );
+      if (!continuar) return;
+    }
+
     setLoading(true);
     try {
       const result = await onActivar(tipo, mensaje);
       setUltimoResultado(result);
-      setDispositivosConectados(result.dispositivosAlcanzados);
+      setDispositivosConectados(result.dispositivosConectados ?? result.dispositivosAlcanzados);
       setMensaje('');
+      await refreshDispositivos();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al activar la alarma');
     } finally {
@@ -62,8 +104,8 @@ export default function AlertsTab({ city, historial, onActivar }: Props) {
             <Radio className="w-4 h-4 mt-0.5 shrink-0 text-rose-500" />
             <span>
               Al confirmar, el servidor envía <code className="text-xs bg-white px-1 rounded">{'{"alarma": true}'}</code> por
-              WebSocket (<code className="text-xs bg-white px-1 rounded">wss://…/alarma</code>) a{' '}
-              <strong>todos los dispositivos móviles conectados</strong>. No hay filtro por radio geográfico.
+              WebSocket a <code className="text-xs bg-white px-1 rounded break-all">{wsUrl}</code> para{' '}
+              <strong>todos los dispositivos móviles conectados</strong>.
             </span>
           </p>
           <p className="flex items-center gap-2 font-semibold text-slate-700">
@@ -71,6 +113,32 @@ export default function AlertsTab({ city, historial, onActivar }: Props) {
             Dispositivos conectados ahora:{' '}
             {dispositivosConectados === null ? '…' : dispositivosConectados}
           </p>
+          {dispositivosConectados === 0 && (
+            <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 text-xs">
+              Ninguna app móvil está escuchando. Abrí EmerRed en el celular con el endpoint{' '}
+              <code className="bg-white px-1 rounded">{import.meta.env.VITE_API_URL || 'https://emerred-production.up.railway.app'}</code>{' '}
+              configurado en Telemetría.
+            </p>
+          )}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={probarCanalWebSocket}
+              disabled={wsProbe === 'testing'}
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-300 hover:bg-white transition"
+            >
+              {wsProbe === 'testing' ? (
+                <Wifi className="w-3.5 h-3.5 animate-pulse" />
+              ) : wsProbe === 'fail' ? (
+                <WifiOff className="w-3.5 h-3.5 text-red-500" />
+              ) : (
+                <Wifi className="w-3.5 h-3.5 text-emerald-600" />
+              )}
+              {wsProbe === 'testing' ? 'Probando canal…' : 'Probar canal WebSocket'}
+            </button>
+            {wsProbe === 'ok' && <span className="text-xs text-emerald-700">Canal accesible</span>}
+            {wsProbe === 'fail' && <span className="text-xs text-red-600">Canal no accesible</span>}
+          </div>
         </div>
 
         <label className="flex flex-col gap-1 text-sm font-semibold">
@@ -95,8 +163,19 @@ export default function AlertsTab({ city, historial, onActivar }: Props) {
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
         {ultimoResultado && (
-          <p className="text-emerald-700 text-sm bg-emerald-50 border border-emerald-200 rounded-lg p-2">
-            Alarma difundida a {ultimoResultado.dispositivosAlcanzados} dispositivo(s) —{' '}
+          <p
+            className={`text-sm rounded-lg p-2 border ${
+              ultimoResultado.dispositivosAlcanzados > 0
+                ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                : 'text-amber-800 bg-amber-50 border-amber-200'
+            }`}
+          >
+            {ultimoResultado.message ?? (
+              <>
+                Alarma difundida a {ultimoResultado.dispositivosAlcanzados} dispositivo(s)
+              </>
+            )}
+            {' — '}
             {new Date(ultimoResultado.timestamp).toLocaleString('es-CO')}
           </p>
         )}
