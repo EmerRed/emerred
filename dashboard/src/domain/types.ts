@@ -1,17 +1,12 @@
-export type Priority = 'critica' | 'alta' | 'media' | 'baja';
-
-export interface Report {
+export interface Afectado {
   id: string;
   lat: number;
-  lon: number;
-  accuracy: number | null;
-  prioridad: Priority;
-  categoria: string;
-  mensaje: string;
-  asignado: string | null;
-  direccion?: string;
-  ciudad?: string;
-  creado: string;
+  long: number;
+  numero_celular: number;
+  potencia_red_movil: number;
+  coneccion_mesh: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ActiveAlert {
@@ -25,10 +20,6 @@ export interface ActiveAlert {
 
 export interface Stats {
   total: number;
-  criticas: number;
-  altas: number;
-  medias: number;
-  bajas: number;
-  asignados: number;
-  porCategoria: Record<string, number>;
+  conMesh: number;
+  muyBaja: number;
 }

@@ -1,7 +1,6 @@
 import { use, useState } from 'react';
 import { AlertTriangle, LogOut } from 'lucide-react';
-import { broadcastAlert, assignReport } from '@/data/api';
-import { MOCK_VOLUNTEERS } from '@/data/volunteers';
+import { broadcastAlert } from '@/data/api';
 import { getDashboardData, refreshDashboardData } from '@/data/resources';
 import { useIdleTimeout } from '@/presentation/hooks/useIdleTimeout';
 import OverviewTab from '@/presentation/components/tabs/OverviewTab';
@@ -27,15 +26,10 @@ export default function Dashboard({ onLogout }: Props) {
   const data = use(dataPromise);
   const [activeTab, setActiveTab] = useState<string>('overview');
 
-  const city = data.alerts[0]?.ciudad ?? data.reports[0]?.ciudad ?? 'Bogotá';
+  const city = data.alerts[0]?.ciudad ?? 'Bogotá';
 
   async function handleBroadcast(tipo: string, mensaje: string) {
     await broadcastAlert({ active: true, tipo, mensaje, ciudad: city, radio: 5000 });
-    setDataPromise(refreshDashboardData());
-  }
-
-  async function handleAssign(id: string, volunteer: string) {
-    await assignReport(id, volunteer);
     setDataPromise(refreshDashboardData());
   }
 
@@ -77,8 +71,8 @@ export default function Dashboard({ onLogout }: Props) {
       <div className="bg-white rounded-b-xl shadow-sm p-5 min-h-[400px]">
         {activeTab === 'overview' && <OverviewTab data={data} />}
         {activeTab === 'alerts' && <AlertsTab alerts={data.alerts} city={city} onBroadcast={handleBroadcast} />}
-        {activeTab === 'map' && <MapTab reports={data.reports} city={city} />}
-        {activeTab === 'reports' && <ReportsTab reports={data.reports} volunteers={MOCK_VOLUNTEERS} onAssign={handleAssign} />}
+        {activeTab === 'map' && <MapTab afectados={data.afectados} city={city} />}
+        {activeTab === 'reports' && <ReportsTab afectados={data.afectados} />}
       </div>
     </div>
   );

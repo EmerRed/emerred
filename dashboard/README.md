@@ -1,6 +1,6 @@
 # Emerred — Dashboard de Administración
 
-Panel web para operadores de emergencia. Permite visualizar reportes, emitir alertas, asignar voluntarios y ver un mapa interactivo con los incidentes.
+Panel web para operadores de emergencia. Permite visualizar afectados desde el endpoint de producción, emitir alertas y ver un mapa interactivo.
 
 ## Tecnología
 
@@ -36,6 +36,14 @@ dashboard/
 └─ vite.config.ts
 ```
 
+## Variables de entorno
+
+Copiá `.env.example` a `.env` y ajustá la URL del backend si es necesario:
+
+```bash
+VITE_API_URL=https://emerred-production.up.railway.app
+```
+
 ## Instalación
 
 ```bash
@@ -55,10 +63,10 @@ Por defecto corre en `http://localhost:5173`.
 
 - **Login mock** con JWT guardado en cookie.
 - **Tabs**: Resumen, Alertas, Mapa, Reportes.
-- **Resumen**: estadísticas, reportes por prioridad y distribución por categoría.
+- **Resumen**: estadísticas de afectados, conexión mesh y señal móvil.
 - **Alertas**: emitir nuevas alertas CBS y ver alertas activas.
-- **Mapa**: pines clickeables con animación y detalle del reporte.
-- **Reportes**: tabla con asignación de voluntarios.
+- **Mapa**: pines clickeables con color según potencia de señal.
+- **Reportes**: tabla de afectados obtenidos desde `/afectados`.
 - **Auto-cierre de sesión** tras 10 minutos de inactividad.
 
 ## Credenciales mock
