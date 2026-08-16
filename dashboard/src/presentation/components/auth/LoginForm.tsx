@@ -39,7 +39,7 @@ export default function LoginForm({ onSuccess }: Props) {
               onChange={e => setEmail(e.target.value)}
               required
               className="p-3 border rounded-lg"
-              placeholder="admin@emerred.co"
+              placeholder="tu@email.com"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm font-semibold">
@@ -62,7 +62,6 @@ export default function LoginForm({ onSuccess }: Props) {
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
-        <p className="text-xs text-slate-400 mt-4">Mock: admin@emerred.co / admin123</p>
       </div>
     </div>
   );
