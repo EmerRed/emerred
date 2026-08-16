@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { X } from 'lucide-react';
 import type { Afectado, PuntoAfectado } from '@/domain/types';
 
 interface Props {
@@ -6,6 +8,8 @@ interface Props {
 }
 
 export default function ReportsTab({ afectados, puntos }: Props) {
+  const [selectedCelulares, setSelectedCelulares] = useState<number[] | null>(null);
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl p-5 shadow-sm">
@@ -34,7 +38,14 @@ export default function ReportsTab({ afectados, puntos }: Props) {
                   <td className="py-2 pr-4">{p.conMesh} de {p.conteo}</td>
                   <td className="py-2 pr-4">{p.lat.toFixed(5)}</td>
                   <td className="py-2 pr-4">{p.long.toFixed(5)}</td>
-                  <td className="py-2 pr-4">{p.celulares.join(', ')}</td>
+                  <td className="py-2 pr-4">
+                    <button
+                      onClick={() => setSelectedCelulares(p.celulares)}
+                      className="text-rose-600 hover:text-rose-800 font-semibold underline"
+                    >
+                      Ver {p.celulares.length} celulares
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -75,6 +86,34 @@ export default function ReportsTab({ afectados, puntos }: Props) {
           </table>
         </div>
       </div>
+
+      {selectedCelulares && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 max-h-[80vh] flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Celulares en el punto</h3>
+              <button
+                onClick={() => setSelectedCelulares(null)}
+                className="text-slate-400 hover:text-slate-700"
+                aria-label="Cerrar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <ul className="overflow-y-auto space-y-1 pr-2 text-sm text-slate-700">
+              {selectedCelulares.map((c, i) => (
+                <li key={`${c}-${i}`} className="py-1 border-b last:border-0">{String(c)}</li>
+              ))}
+            </ul>
+            <button
+              onClick={() => setSelectedCelulares(null)}
+              className="mt-4 bg-rose-600 text-white rounded-lg py-2 font-semibold hover:bg-rose-700 transition"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
