@@ -251,3 +251,25 @@ def print_emergency_report(report: Any, response: Any):
         )
     )
 
+
+def print_portal_bulletin(bulletin_text: str, export_paths: Dict[str, Any]):
+    """Muestra el boletín optimizado para la aplicación móvil en la consola."""
+    console.print("\n")
+    console.print(
+        Panel(
+            f"[bold white]{bulletin_text}[/]",
+            title="[bold green]📱 BOLETÍN OFICIAL FORMATEADO PARA LA APP MÓVIL (EMERCHAT / MESH / SMS)[/]",
+            border_style="green",
+            padding=(1, 2),
+        )
+    )
+
+    console.print("\n📁 [bold white]Archivos generados para la aplicación:[/]")
+    if "txt" in export_paths:
+        console.print(f"  • [bold cyan]Texto Móvil/SMS:[/] [link=file://{export_paths['txt'].absolute()}]{export_paths['txt'].name}[/]")
+    if "json" in export_paths:
+        console.print(f"  • [bold yellow]JSON Estructurado App Android:[/] [link=file://{export_paths['json'].absolute()}]{export_paths['json'].name}[/]")
+    if "md" in export_paths:
+        console.print(f"  • [bold green]Markdown Completo:[/] [link=file://{export_paths['md'].absolute()}]{export_paths['md'].name}[/]")
+
+

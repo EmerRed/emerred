@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, LogOut } from 'lucide-react';
+import { AlertTriangle, LogOut, Globe } from 'lucide-react';
 import { broadcastAlert } from '@/data/api';
 import { subscribeToAfectadosUpdates } from '@/data/sse';
 import { getDashboardData, refreshDashboardData, appendAfectado, type DashboardData } from '@/data/resources';
@@ -14,15 +14,16 @@ import type { Afectado } from '@/domain/types';
 const TABS = [
   { id: 'overview', label: 'Resumen' },
   { id: 'alerts', label: 'Alertas' },
-  { id: 'map', label: 'Mapa' },
-  { id: 'reports', label: 'Reportes' },
+  { id: 'map', label: 'Mapa de Señal' },
+  { id: 'reports', label: 'Reportes y Nodos' },
 ] as const;
 
 interface Props {
   onLogout: () => void;
+  onBackToPublic?: () => void;
 }
 
-export default function Dashboard({ onLogout }: Props) {
+export default function Dashboard({ onLogout, onBackToPublic }: Props) {
   useIdleTimeout();
 
   const [data, setData] = useState<DashboardData | null>(null);
@@ -46,7 +47,7 @@ export default function Dashboard({ onLogout }: Props) {
     return <SkeletonDashboard />;
   }
 
-  const city = data.alerts[0]?.ciudad ?? 'Bogotá';
+  const city = data.alerts[0]?.ciudad ?? 'Cali';
 
   async function handleBroadcast(tipo: string, mensaje: string) {
     await broadcastAlert({ active: true, tipo, mensaje, ciudad: city, radio: 5000 });
@@ -55,31 +56,57 @@ export default function Dashboard({ onLogout }: Props) {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <header className="mb-6 flex justify-between items-start">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-          <h1 className="flex items-center gap-3 text-3xl font-bold text-rose-600">
-            <AlertTriangle className="w-8 h-8" /> Emerred Admin
-          </h1>
-          <p className="text-slate-500 mt-1">Panel de control para operadores de emergencia</p>
+          <div className="flex items-center gap-2">
+            <span className="bg-rose-600 text-white p-2 rounded-xl">
+              <AlertTriangle className="w-6 h-6" />
+            </span>
+            <div>
+              <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
+                EmerRed PMU Operadores
+                <span className="bg-rose-100 text-rose-800 text-xs font-bold px-2 py-0.5 rounded-full">
+                  Cali Activo
+                </span>
+              </h1>
+              <p className="text-xs text-slate-500">
+                Consola técnica de telemetría de afectados, red mesh y emisión de alertas
+              </p>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-2 text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-lg font-semibold transition"
-        >
-          <LogOut className="w-4 h-4" /> Cerrar sesión
-        </button>
+
+        <div className="flex items-center gap-3">
+          {onBackToPublic && (
+            <button
+              onClick={onBackToPublic}
+              className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-sm"
+            >
+              <Globe className="w-4 h-4 text-emerald-400" />
+              <span>Ver Portal Ciudadano Cali</span>
+            </button>
+          )}
+
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-1.5 text-rose-600 hover:bg-rose-50 border border-rose-200 px-3.5 py-2 rounded-xl text-xs font-bold transition"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Cerrar sesión</span>
+          </button>
+        </div>
       </header>
 
-      <div className="bg-white rounded-t-xl shadow-sm p-2 mb-0">
+      <div className="bg-white rounded-t-2xl shadow-sm border border-b-0 border-slate-200 p-2">
         <div className="flex gap-2 overflow-x-auto">
           {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition ${
                 activeTab === tab.id
-                  ? 'bg-rose-600 text-white'
+                  ? 'bg-rose-600 text-white shadow-sm'
                   : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
@@ -89,7 +116,7 @@ export default function Dashboard({ onLogout }: Props) {
         </div>
       </div>
 
-      <div className="bg-white rounded-b-xl shadow-sm p-5 min-h-[400px]">
+      <div className="bg-white rounded-b-2xl shadow-sm border border-slate-200 p-5 min-h-[400px]">
         {activeTab === 'overview' && <OverviewTab data={data} />}
         {activeTab === 'alerts' && <AlertsTab alerts={data.alerts} city={city} onBroadcast={handleBroadcast} />}
         {activeTab === 'map' && <MapTab puntos={data.puntos} city={city} />}

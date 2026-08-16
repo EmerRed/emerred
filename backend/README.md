@@ -103,6 +103,28 @@ http://localhost:3000
 |--------|----------|-------------|
 | `GET` | `/health` | Verificar estado del servidor |
 
+### Alarma de emergencia
+
+La app móvil mantiene un WebSocket abierto en `wss://<host>/alarma`. Al activar
+la alarma, el servidor difunde `{"alarma": true}` a todos los dispositivos
+conectados, lo que fuerza la telemetría y la alerta sonora en cada uno.
+
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/alarma/activar` | Difundir la alarma a todos los dispositivos | JWT (admin/operator) |
+| `GET` | `/alarma/dispositivos` | Dispositivos conectados al canal | JWT (admin/operator) |
+| `WS` | `/alarma` | Canal WebSocket de alarma (clientes móviles) | - |
+
+#### Activar la alarma
+```bash
+TOKEN=$(curl -s -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@gmail.com","password":"123456"}' | jq -r .data.token)
+
+curl -X POST http://localhost:3000/alarma/activar \
+  -H "Authorization: Bearer $TOKEN"
+```
+
 ## 📦 Modelo de Datos
 
 ### Afectado
@@ -191,6 +213,7 @@ backend/
 ├── src/
 │   ├── config/
 │   │   ├── database.js      # Configuración MongoDB
+│   │   ├── alarma.js        # Canal WebSocket de alarma (/alarma)
 │   │   └── swagger.js       # Configuración Swagger/OpenAPI
 │   ├── controllers/
 │   │   └── afectadoController.js  # Lógica de negocio
@@ -200,7 +223,8 @@ backend/
 │   ├── models/
 │   │   └── Afectado.js      # Modelo Mongoose
 │   ├── routes/
-│   │   └── afectados.js     # Rutas REST + docs Swagger
+│   │   ├── afectados.js     # Rutas REST + docs Swagger
+│   │   └── alarma.js        # Disparador de alarma + docs Swagger
 │   └── app.js               # Configuración Express
 ├── server.js                # Punto de entrada
 ├── .env.example             # Variables de entorno ejemplo

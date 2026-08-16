@@ -35,6 +35,10 @@ const options = {
       {
         name: 'Autenticación',
         description: 'Login, registro y gestión de tokens JWT'
+      },
+      {
+        name: 'Alarma',
+        description: 'Activación de la alarma de emergencia vía WebSocket (canal /alarma)'
       }
     ],
     components: {

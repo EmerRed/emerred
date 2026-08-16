@@ -15,6 +15,7 @@ from synth.agent import agent, SynthesisAgent
 from synth.llm import GeminiClient
 from synth.models.schemas import SynthesisReport, AfectadoReportInput
 from synth.tools.emergency_client import emergency_client
+from synth.tools.portal_collector import portal_collector
 from synth.ui.console import (
     console,
     print_banner,
@@ -22,6 +23,7 @@ from synth.ui.console import (
     print_sources_summary,
     print_report,
     print_emergency_report,
+    print_portal_bulletin,
 )
 from synth.ui.exporter import report_exporter
 
@@ -261,6 +263,39 @@ def emergency_cmd(
     print_emergency_report(parsed_report, response)
 
 
+@app.command(name="collect-portal")
+def collect_portal_cmd(
+    url: Optional[str] = typer.Option(None, "--url", "-u", help="URL del portal de emergencia si está en vivo (ej: http://localhost:5173)"),
+    send_to_app: bool = typer.Option(False, "--send-app", "--broadcast", help="Transmitir el boletín al endpoint de la aplicación / backend"),
+    endpoint: Optional[str] = typer.Option(None, "--endpoint", help="Endpoint destino de la app o backend"),
+):
+    """
+    Recolecta toda la información del portal de emergencia de Cali (centros de acopio,
+    desaparecidos, albergues, hospitales, rutas de agua, líneas 24/7) y la formatea
+    en estructuras ultra-legibles para la app móvil (EmerChat / Mesh / SMS).
+    """
+    print_banner()
+
+    with Status("[cyan]Recolectando y estructurando información del portal de emergencia...", console=console, spinner="earth"):
+        if url:
+            data = portal_collector.collect_from_url(url)
+        else:
+            data = portal_collector.extract_from_local_source()
+
+        bulletin_text = portal_collector.format_mobile_bulletin(data)
+        export_paths = portal_collector.save_and_export_bulletin(data)
+
+    print_portal_bulletin(bulletin_text, export_paths)
+
+    if send_to_app:
+        with Status("[cyan]Transmitiendo boletín a la red de la aplicación móvil...", console=console, spinner="bouncingBar"):
+            resp = portal_collector.send_to_app_api(endpoint_url=endpoint, data=portal_collector.format_app_json(data))
+        if resp.get("exito"):
+            console.print(f"\n[bold green]✓ Boletín transmitido exitosamente a la aplicación:[/] [cyan]{resp.get('endpoint')}[/]")
+        else:
+            console.print(f"\n[bold yellow]⚠️ Aviso de transmisión a la app:[/] {resp.get('error') or resp.get('nota')}")
+
+
 @app.command(name="interactive")
 def interactive_shell():
     """Lanza la consola interactiva guiada de OmniSynth."""
@@ -272,10 +307,11 @@ def interactive_shell():
         console.print("  [bold white]2.[/] 🌐 Sintetizar URLs específicas")
         console.print("  [bold white]3.[/] 📰 Sintetizar canal de noticias / Feed RSS")
         console.print("  [bold white]4.[/] 📡 Despachar telemetría de afectado (EmerRed)")
-        console.print("  [bold white]5.[/] ⚙️  Ver / Configurar clave de Gemini y opciones")
-        console.print("  [bold white]6.[/] 🚪 Salir")
+        console.print("  [bold white]5.[/] 📱 Recolectar información del portal y formatear para la App (EmerChat / SMS)")
+        console.print("  [bold white]6.[/] ⚙️  Ver / Configurar clave de Gemini y opciones")
+        console.print("  [bold white]7.[/] 🚪 Salir")
 
-        option = Prompt.ask("\n[bold green]Selecciona una opción[/]", choices=["1", "2", "3", "4", "5", "6"], default="1")
+        option = Prompt.ask("\n[bold green]Selecciona una opción[/]", choices=["1", "2", "3", "4", "5", "6", "7"], default="5")
 
         if option == "1":
             topic = Prompt.ask("\n[bold white]Ingresa el tema o pregunta a investigar[/]")
@@ -295,8 +331,11 @@ def interactive_shell():
         elif option == "4":
             emergency_cmd()
         elif option == "5":
-            config_menu()
+            send_app = Confirm.ask("¿Deseas intentar transmitir el boletín al endpoint de la aplicación?", default=False)
+            collect_portal_cmd(send_to_app=send_app)
         elif option == "6":
+            config_menu()
+        elif option == "7":
             console.print("[cyan]¡Hasta luego! Gracias por usar OmniSynth.[/]")
             break
 
