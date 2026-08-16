@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
+
+# Bun
+.bun/
