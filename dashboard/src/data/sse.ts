@@ -9,10 +9,8 @@ export function subscribeToAfectadosUpdates(onUpdate: () => void): () => void {
     onUpdate();
   });
 
-  sse.onerror = () => {
-    sse.close();
-  };
-
+  // EventSource se reconecta solo por defecto; no cerramos manualmente en error.
+  // Se retorna una funcion de limpieza para cerrar cuando el componente se desmonta.
   return () => {
     sse.close();
   };
