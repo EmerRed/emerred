@@ -1,8 +1,10 @@
 import { getAfectados, getActiveAlerts } from '@/data/api';
-import type { Afectado, ActiveAlert, Stats } from '@/domain/types';
+import { aggregateByLocation } from '@/data/aggregation';
+import type { Afectado, PuntoAfectado, ActiveAlert, Stats } from '@/domain/types';
 
 export interface DashboardData {
   afectados: Afectado[];
+  puntos: PuntoAfectado[];
   alerts: ActiveAlert[];
   stats: Stats;
 }
@@ -18,7 +20,8 @@ function computeStats(afectados: Afectado[]): Stats {
 
 async function load(): Promise<DashboardData> {
   const [afectados, alerts] = await Promise.all([getAfectados(), getActiveAlerts()]);
-  return { afectados, alerts, stats: computeStats(afectados) };
+  const puntos = aggregateByLocation(afectados);
+  return { afectados, puntos, alerts, stats: computeStats(afectados) };
 }
 
 export function getDashboardData(): Promise<DashboardData> {

@@ -71,8 +71,8 @@ export default function Dashboard({ onLogout }: Props) {
       <div className="bg-white rounded-b-xl shadow-sm p-5 min-h-[400px]">
         {activeTab === 'overview' && <OverviewTab data={data} />}
         {activeTab === 'alerts' && <AlertsTab alerts={data.alerts} city={city} onBroadcast={handleBroadcast} />}
-        {activeTab === 'map' && <MapTab afectados={data.afectados} city={city} />}
-        {activeTab === 'reports' && <ReportsTab afectados={data.afectados} />}
+        {activeTab === 'map' && <MapTab puntos={data.puntos} city={city} />}
+        {activeTab === 'reports' && <ReportsTab afectados={data.afectados} puntos={data.puntos} />}
       </div>
     </div>
   );

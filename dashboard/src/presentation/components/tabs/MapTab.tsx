@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Map, Marker } from 'pigeon-maps';
-import type { Afectado } from '@/domain/types';
+import type { PuntoAfectado } from '@/domain/types';
 import { getAddress } from '@/data/geocoding';
 
 interface Props {
-  afectados: Afectado[];
+  puntos: PuntoAfectado[];
   city: string;
 }
 
-export default function MapTab({ afectados, city }: Props) {
-  const [selected, setSelected] = useState<Afectado | null>(null);
+export default function MapTab({ puntos, city }: Props) {
+  const [selected, setSelected] = useState<PuntoAfectado | null>(null);
   const [address, setAddress] = useState<string>('Cargando dirección...');
-  const center = getCenter(afectados);
+  const center = getCenter(puntos);
 
   useEffect(() => {
     if (!selected) return;
@@ -28,13 +28,13 @@ export default function MapTab({ afectados, city }: Props) {
       <h2 className="text-lg font-semibold mb-4">Mapa — {city}</h2>
       <div className="h-[500px] rounded-lg overflow-hidden relative">
         <Map height={500} defaultCenter={center} defaultZoom={13}>
-          {afectados.map(a => (
+          {puntos.map(p => (
             <Marker
-              key={a.id}
+              key={p.id}
               width={30}
-              anchor={[a.lat, a.long]}
-              color={signalColor(a.potencia_red_movil)}
-              onClick={() => setSelected(a)}
+              anchor={[p.lat, p.long]}
+              color={signalColor(p.promedio)}
+              onClick={() => setSelected(p)}
             />
           ))}
         </Map>
@@ -45,16 +45,16 @@ export default function MapTab({ afectados, city }: Props) {
               <h3 className="font-bold text-slate-800">Afectado</h3>
               <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-700 text-xl">×</button>
             </div>
-            <p className="text-sm text-slate-600 mt-2"><strong>Celular:</strong> {selected.numero_celular}</p>
-            <p className="text-sm text-slate-600"><strong>Señal:</strong> {signalLabel(selected.potencia_red_movil)} ({selected.potencia_red_movil} dBm)</p>
-            <p className="text-sm text-slate-600"><strong>Mesh:</strong> {selected.coneccion_mesh ? 'Sí' : 'No'}</p>
+            <p className="text-sm text-slate-600 mt-2"><strong>Repeticiones:</strong> {selected.conteo}</p>
+            <p className="text-sm text-slate-600"><strong>Promedio señal:</strong> {signalLabel(selected.promedio)} ({selected.promedio} dBm)</p>
+            <p className="text-sm text-slate-600"><strong>Con mesh:</strong> {selected.conMesh} de {selected.conteo}</p>
+            <p className="text-sm text-slate-600"><strong>Celulares:</strong> {selected.celulares.join(', ')}</p>
             <p className="text-sm text-slate-600"><strong>Ubicación:</strong> {selected.lat.toFixed(5)}, {selected.long.toFixed(5)}</p>
             <p className="text-sm text-slate-600 mt-2 line-clamp-3" title={address}><strong>Dirección:</strong> {address}</p>
-            <p className="text-xs text-slate-400 mt-1">{new Date(selected.createdAt).toLocaleString()}</p>
           </div>
         )}
       </div>
-      <p className="text-xs text-slate-400 mt-2">Hacé click en un pin para ver el detalle.</p>
+      <p className="text-xs text-slate-400 mt-2">Hacé click en un pin para ver el detalle agrupado.</p>
 
       <div className="flex flex-wrap gap-4 mt-4 text-sm text-slate-600">
         {[
@@ -73,23 +73,23 @@ export default function MapTab({ afectados, city }: Props) {
   );
 }
 
-function getCenter(afectados: Afectado[]): [number, number] {
-  if (afectados.length === 0) return [4.6, -74.07];
-  const lat = afectados.reduce((s, a) => s + a.lat, 0) / afectados.length;
-  const long = afectados.reduce((s, a) => s + a.long, 0) / afectados.length;
+function getCenter(puntos: PuntoAfectado[]): [number, number] {
+  if (puntos.length === 0) return [4.6, -74.07];
+  const lat = puntos.reduce((s, p) => s + p.lat, 0) / puntos.length;
+  const long = puntos.reduce((s, p) => s + p.long, 0) / puntos.length;
   return [lat, long];
 }
 
-function signalColor(potencia: number): string {
-  if (potencia < -100) return '#dc3545';
-  if (potencia < -85) return '#fd7e14';
-  if (potencia < -70) return '#ffc107';
+function signalColor(promedio: number): string {
+  if (promedio < -100) return '#dc3545';
+  if (promedio < -85) return '#fd7e14';
+  if (promedio < -70) return '#ffc107';
   return '#28a745';
 }
 
-function signalLabel(potencia: number): string {
-  if (potencia < -100) return 'Muy baja';
-  if (potencia < -85) return 'Baja';
-  if (potencia < -70) return 'Media';
+function signalLabel(promedio: number): string {
+  if (promedio < -100) return 'Muy baja';
+  if (promedio < -85) return 'Baja';
+  if (promedio < -70) return 'Media';
   return 'Optima';
 }

@@ -9,6 +9,16 @@ export interface Afectado {
   updatedAt: string;
 }
 
+export interface PuntoAfectado {
+  id: string;
+  lat: number;
+  long: number;
+  conteo: number;
+  promedio: number;
+  celulares: number[];
+  conMesh: number;
+}
+
 export interface ActiveAlert {
   id: string;
   active: boolean;
