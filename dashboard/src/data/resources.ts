@@ -1,17 +1,24 @@
-import { getReports, getActiveAlerts, getStats } from '@/data/api';
-import type { Report, ActiveAlert, Stats } from '@/domain/types';
+import { getAfectados, getActiveAlerts } from '@/data/api';
+import type { Afectado, ActiveAlert, Stats } from '@/domain/types';
 
 export interface DashboardData {
-  reports: Report[];
+  afectados: Afectado[];
   alerts: ActiveAlert[];
   stats: Stats;
 }
 
 let promise: Promise<DashboardData> | null = null;
 
+function computeStats(afectados: Afectado[]): Stats {
+  const total = afectados.length;
+  const conMesh = afectados.filter(a => a.coneccion_mesh).length;
+  const potenciaBaja = afectados.filter(a => a.potencia_red_movil < -85).length;
+  return { total, conMesh, potenciaBaja };
+}
+
 async function load(): Promise<DashboardData> {
-  const [reports, alerts, stats] = await Promise.all([getReports(), getActiveAlerts(), getStats()]);
-  return { reports, alerts, stats };
+  const [afectados, alerts] = await Promise.all([getAfectados(), getActiveAlerts()]);
+  return { afectados, alerts, stats: computeStats(afectados) };
 }
 
 export function getDashboardData(): Promise<DashboardData> {
