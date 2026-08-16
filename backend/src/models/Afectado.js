@@ -28,7 +28,6 @@ const afectadoSchema = new mongoose.Schema({
   numero_celular: {
     type: Number,
     required: [true, 'El número de celular es obligatorio'],
-    unique: true,
     validate: {
       validator: function(v) {
         return Number.isInteger(v) && v >= 100000000 && v <= 9999999999;
@@ -55,8 +54,6 @@ const afectadoSchema = new mongoose.Schema({
   timestamps: true,
   versionKey: false
 });
-
-afectadoSchema.index({ numero_celular: 1 }, { unique: true });
 
 afectadoSchema.set('toJSON', {
   transform: function(doc, ret) {

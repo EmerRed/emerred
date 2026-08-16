@@ -2,12 +2,14 @@ require('dotenv').config();
 
 const app = require('./src/app');
 const connectDB = require('./src/config/database');
+const seedAdmin = require('./src/config/seedAdmin');
 
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
     await connectDB();
+    await seedAdmin();
     
     const server = app.listen(PORT, () => {
       console.log(`\n🚀 Servidor iniciado en http://localhost:${PORT}`);

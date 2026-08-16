@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { swaggerSetup } = require('./config/swagger');
 const afectadosRoutes = require('./routes/afectados');
+const authRoutes = require('./routes/auth');
 const { errorHandler, notFound } = require('./middlewares/errorHandler');
 
 const app = express();
@@ -30,6 +31,7 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.use('/auth', authRoutes);
 app.use('/afectados', afectadosRoutes);
 
 swaggerSetup(app);
