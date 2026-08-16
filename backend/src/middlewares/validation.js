@@ -78,6 +78,59 @@ const celularParamSchema = Joi.object({
     })
 });
 
+const loginSchema = Joi.object({
+  email: Joi.string()
+    .email({ tlds: { allow: false } })
+    .required()
+    .messages({
+      'string.email': 'Email inválido',
+      'any.required': 'El email es obligatorio'
+    }),
+  password: Joi.string()
+    .min(6)
+    .max(100)
+    .required()
+    .messages({
+      'string.min': 'La contraseña debe tener al menos 6 caracteres',
+      'string.max': 'La contraseña no puede exceder 100 caracteres',
+      'any.required': 'La contraseña es obligatoria'
+    })
+});
+
+const registerSchema = Joi.object({
+  email: Joi.string()
+    .email({ tlds: { allow: false } })
+    .required()
+    .messages({
+      'string.email': 'Email inválido',
+      'any.required': 'El email es obligatorio'
+    }),
+  password: Joi.string()
+    .min(6)
+    .max(100)
+    .required()
+    .messages({
+      'string.min': 'La contraseña debe tener al menos 6 caracteres',
+      'string.max': 'La contraseña no puede exceder 100 caracteres',
+      'any.required': 'La contraseña es obligatoria'
+    }),
+  name: Joi.string()
+    .min(2)
+    .max(100)
+    .required()
+    .messages({
+      'string.min': 'El nombre debe tener al menos 2 caracteres',
+      'string.max': 'El nombre no puede exceder 100 caracteres',
+      'any.required': 'El nombre es obligatorio'
+    }),
+  role: Joi.string()
+    .valid('admin', 'operator', 'viewer')
+    .default('viewer')
+    .messages({
+      'any.only': 'Rol inválido. Debe ser admin, operator o viewer'
+    })
+});
+
 const validate = (schema, property = 'body') => {
   return (req, res, next) => {
     const { error, value } = schema.validate(req[property], { 
@@ -106,5 +159,7 @@ const validate = (schema, property = 'body') => {
 module.exports = {
   validateAfectado: validate(afectadoSchema),
   validateIdParam: validate(idParamSchema, 'params'),
-  validateCelularParam: validate(celularParamSchema, 'params')
+  validateCelularParam: validate(celularParamSchema, 'params'),
+  validateLogin: validate(loginSchema),
+  validateRegister: validate(registerSchema)
 };

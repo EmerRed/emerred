@@ -31,9 +31,21 @@ const options = {
       {
         name: 'Afectados',
         description: 'Operaciones CRUD para gestión de afectados'
+      },
+      {
+        name: 'Autenticación',
+        description: 'Login, registro y gestión de tokens JWT'
       }
     ],
     components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Ingrese el token JWT en formato: Bearer <token>'
+        }
+      },
       schemas: {
         Afectado: {
           type: 'object',
@@ -126,6 +138,43 @@ const options = {
             coneccion_mesh: {
               type: 'boolean',
               example: false
+            }
+          }
+        },
+        User: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              description: 'ID único del usuario',
+              example: '64f1a2b3c4d5e6f7a8b9c0d1'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'Email del usuario',
+              example: 'admin@gmail.com'
+            },
+            name: {
+              type: 'string',
+              description: 'Nombre del usuario',
+              example: 'Administrador'
+            },
+            role: {
+              type: 'string',
+              enum: ['admin', 'operator', 'viewer'],
+              description: 'Rol del usuario',
+              example: 'admin'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha de creación'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha de última actualización'
             }
           }
         },
