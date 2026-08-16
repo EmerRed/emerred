@@ -1,3 +1,4 @@
+const API_BASE = import.meta.env.VITE_API_URL || 'https://emerred-production.up.railway.app';
 const TOKEN_KEY = 'emerred_token';
 
 export interface Credentials {
@@ -7,7 +8,7 @@ export interface Credentials {
 
 export interface AuthResult {
   token: string;
-  user: { id: string; email: string; name: string };
+  user: { id: string; email: string; name: string; role: string };
 }
 
 function setCookie(name: string, value: string, days = 1) {
@@ -32,33 +33,27 @@ export function removeAuthToken() {
   deleteCookie(TOKEN_KEY);
 }
 
-function makeFakeJwt(email: string): string {
-  const header = btoa(JSON.stringify({ alg: 'none', typ: 'JWT' }));
-  const payload = btoa(JSON.stringify({ sub: 'admin-1', email, role: 'admin', exp: Date.now() + 3600_000 }));
-  return `${header}.${payload}.mock-signature`;
-}
-
-// MOCK: reemplazar por POST /auth/login cuando el backend esté listo
 export async function login(credentials: Credentials): Promise<AuthResult> {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (credentials.email === 'admin@emerred.co' && credentials.password === 'admin123') {
-        const token = makeFakeJwt(credentials.email);
-        setCookie(TOKEN_KEY, token);
-        resolve({
-          token,
-          user: { id: 'admin-1', email: credentials.email, name: 'Administrador' },
-        });
-      } else {
-        reject(new Error('Credenciales inválidas'));
-      }
-    }, 600);
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify(credentials),
   });
+
+  const json = await res.json().catch(() => ({ success: false, message: 'Respuesta no válida' }));
+
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || 'Error de autenticación');
+  }
+
+  const { token, user } = json.data;
+  setCookie(TOKEN_KEY, token);
+  return { token, user };
 }
 
 export function isAuthenticated(): boolean {
-  const token = getAuthToken();
-  if (!token) return false;
-  // MOCK: en producción validar expiración o refrescar con el backend
-  return true;
+  return !!getAuthToken();
 }
