@@ -1,14 +1,14 @@
 # Emerred — Dashboard de Administración
 
-Panel web para operadores de emergencia. Permite visualizar afectados desde el endpoint de producción, emitir alertas y ver un mapa interactivo.
+Panel web para operadores de emergencia. Se conecta al backend de producción para mostrar afectados en tiempo real, emitir alertas y visualizar un mapa interactivo.
 
 ## Tecnología
 
 - [Vite](https://vitejs.dev/) + [React 19](https://react.dev/) + [TypeScript 5.6](https://www.typescriptlang.org/)
-- [Bun](https://bun.sh/) como package manager y runtime
 - [Tailwind CSS v4](https://tailwindcss.com/) para estilos
 - [Recharts](https://recharts.org/) para gráficos
 - [Pigeon Maps](https://pigeon-maps.js.org/) para el mapa
+- [Bun](https://bun.sh/) como package manager
 
 ## Estructura (Clean Architecture)
 
@@ -16,33 +16,45 @@ Panel web para operadores de emergencia. Permite visualizar afectados desde el e
 dashboard/
 ├─ src/
 │  ├─ domain/
-│  │  └─ types.ts           # Entidades y tipos puros
+│  │  └─ types.ts             # Entidades y tipos puros
 │  ├─ data/
-│  │  ├─ api.ts             # Adaptadores mock (reemplazables por fetch real)
-│  │  ├─ auth.ts            # Login/logout mock con JWT en cookie
-│  │  ├─ resources.ts       # Recursos para Suspense
-│  │  └─ volunteers.ts      # Lista mock de voluntarios
+│  │  ├─ api.ts               # Llamadas a /afectados
+│  │  ├─ auth.ts              # Login con backend real
+│  │  ├─ sse.ts               # Suscripción a eventos SSE
+│  │  ├─ aggregation.ts       # Agrupación por ubicación
+│  │  └─ resources.ts         # Carga y actualización del dashboard
 │  ├─ presentation/
-│  │  ├─ App.tsx            # Ruteo condicional por autenticación
-│  │  ├─ Dashboard.tsx      # Tabs y orquestación
+│  │  ├─ App.tsx              # Ruteo condicional por autenticación
+│  │  ├─ Dashboard.tsx        # Tabs y orquestación
 │  │  ├─ components/
-│  │  │  ├─ tabs/           # Vista de cada tab
+│  │  │  ├─ tabs/             # Vista de cada tab
 │  │  │  ├─ auth/
-│  │  │  ├─ ui/
-│  │  │  └─ ...
+│  │  │  └─ ui/
 │  │  └─ hooks/
 │  │     └─ useIdleTimeout.ts
+├─ .env.example
+├─ vercel.json
 ├─ package.json
 └─ vite.config.ts
 ```
 
 ## Variables de entorno
 
-Copiá `.env.example` a `.env` y ajustá la URL del backend si es necesario:
+El frontend usa la variable `VITE_API_URL` para saber dónde está el backend. No comitees archivos `.env` reales.
+
+1. Copiá `.env.example` a `.env` para desarrollo local:
 
 ```bash
+cp .env.example .env
+```
+
+2. Editá `.env` con la URL del backend:
+
+```env
 VITE_API_URL=https://emerred-production.up.railway.app
 ```
+
+3. En producción (Vercel), seteá `VITE_API_URL` en **Settings → Environment Variables** del proyecto.
 
 ## Instalación
 
@@ -51,7 +63,7 @@ cd dashboard
 bun install
 ```
 
-## Ejecución
+## Ejecución local
 
 ```bash
 bun run dev
@@ -59,25 +71,37 @@ bun run dev
 
 Por defecto corre en `http://localhost:5173`.
 
+## Build
+
+```bash
+bun run build
+bun run preview
+```
+
+## Deploy en Vercel
+
+1. Importá el repositorio en Vercel.
+2. Configurá el **Root Directory** del proyecto como `dashboard`.
+3. En **Settings → Environment Variables** agregá:
+   - `VITE_API_URL` con la URL del backend.
+4. Vercel detectará Vite automáticamente y generará el build.
+
 ## Funcionalidades
 
-- **Login mock** con JWT guardado en cookie.
+- **Login real** contra `POST /auth/login` con JWT en cookie.
+- **Actualización en tiempo real** por SSE cuando se crea un afectado.
 - **Tabs**: Resumen, Alertas, Mapa, Reportes.
-- **Resumen**: estadísticas de afectados, conexión mesh y señal móvil.
-- **Alertas**: emitir nuevas alertas CBS y ver alertas activas.
-- **Mapa**: pines clickeables con color según potencia de señal.
-- **Reportes**: tabla de afectados obtenidos desde `/afectados`.
+- **Resumen**: estadísticas, calidad de señal móvil y conexión mesh.
+- **Alertas**: emitir nuevas alertas y ver alertas activas.
+- **Mapa**: pines agrupados por ubicación con color según promedio de señal.
+- **Reportes**: tabla de afectados y puntos agrupados con listado completo de celulares.
 - **Auto-cierre de sesión** tras 10 minutos de inactividad.
 
-## Credenciales mock
+## Credenciales
+
+Usá las credenciales del backend. Ejemplo del seed admin:
 
 ```
-Email: admin@emerred.co
-Contraseña: admin123
+Email: admin@gmail.com
+Contraseña: 123456
 ```
-
-## Conectar con backend real
-
-1. Reemplazar las funciones en `src/data/api.ts` por llamadas `fetch` reales.
-2. Actualizar `src/data/auth.ts` para apuntar a `POST /auth/login`.
-3. Ajustar el dominio en `src/data/resources.ts` según el backend.
