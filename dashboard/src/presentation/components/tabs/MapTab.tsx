@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Map, Marker } from 'pigeon-maps';
 import type { Afectado } from '@/domain/types';
+import { getAddress } from '@/data/geocoding';
 
 interface Props {
   afectados: Afectado[];
@@ -9,7 +10,18 @@ interface Props {
 
 export default function MapTab({ afectados, city }: Props) {
   const [selected, setSelected] = useState<Afectado | null>(null);
+  const [address, setAddress] = useState<string>('Cargando dirección...');
   const center = getCenter(afectados);
+
+  useEffect(() => {
+    if (!selected) return;
+    setAddress('Cargando dirección...');
+    let cancelled = false;
+    getAddress(selected.lat, selected.long).then(addr => {
+      if (!cancelled) setAddress(addr);
+    });
+    return () => { cancelled = true; };
+  }, [selected]);
 
   return (
     <div className="bg-white rounded-xl p-5 shadow-sm">
@@ -28,7 +40,7 @@ export default function MapTab({ afectados, city }: Props) {
         </Map>
 
         {selected && (
-          <div key={selected.id} className="popup-animate absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-72 bg-white rounded-xl shadow-lg p-4 z-10">
+          <div key={selected.id} className="popup-animate absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 bg-white rounded-xl shadow-lg p-4 z-10">
             <div className="flex justify-between items-start">
               <h3 className="font-bold text-slate-800">Afectado</h3>
               <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-700 text-xl">×</button>
@@ -37,6 +49,7 @@ export default function MapTab({ afectados, city }: Props) {
             <p className="text-sm text-slate-600"><strong>Señal:</strong> {selected.potencia_red_movil} dBm</p>
             <p className="text-sm text-slate-600"><strong>Mesh:</strong> {selected.coneccion_mesh ? 'Sí' : 'No'}</p>
             <p className="text-sm text-slate-600"><strong>Ubicación:</strong> {selected.lat.toFixed(5)}, {selected.long.toFixed(5)}</p>
+            <p className="text-sm text-slate-600 mt-2 line-clamp-3" title={address}><strong>Dirección:</strong> {address}</p>
             <p className="text-xs text-slate-400 mt-1">{new Date(selected.createdAt).toLocaleString()}</p>
           </div>
         )}
