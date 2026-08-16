@@ -2,11 +2,14 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+# Copiar package.json desde backend/
+COPY backend/package*.json ./
 
 RUN npm ci --only=production
 
-COPY . .
+# Copiar solo el código de backend/
+COPY backend/src ./src
+COPY backend/server.js ./
 
 EXPOSE 3000
 

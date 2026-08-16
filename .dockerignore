@@ -1,0 +1,19 @@
+# Ignorar todo excepto backend/
+*
+!backend/
+
+# Ignorar dentro de backend
+backend/node_modules
+backend/npm-debug.log
+backend/.env
+backend/.env.local
+backend/.git
+backend/.gitignore
+backend/README.md
+backend/docker-compose.yml
+backend/Dockerfile
+backend/.dockerignore
+backend/*.log
+backend/coverage
+backend/.vscode
+backend/.idea
