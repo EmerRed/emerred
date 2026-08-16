@@ -12,8 +12,8 @@ let promise: Promise<DashboardData> | null = null;
 function computeStats(afectados: Afectado[]): Stats {
   const total = afectados.length;
   const conMesh = afectados.filter(a => a.coneccion_mesh).length;
-  const potenciaBaja = afectados.filter(a => a.potencia_red_movil < -85).length;
-  return { total, conMesh, potenciaBaja };
+  const muyBaja = afectados.filter(a => a.potencia_red_movil < -100).length;
+  return { total, conMesh, muyBaja };
 }
 
 async function load(): Promise<DashboardData> {

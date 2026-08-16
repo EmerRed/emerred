@@ -46,7 +46,7 @@ export default function MapTab({ afectados, city }: Props) {
               <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-700 text-xl">×</button>
             </div>
             <p className="text-sm text-slate-600 mt-2"><strong>Celular:</strong> {selected.numero_celular}</p>
-            <p className="text-sm text-slate-600"><strong>Señal:</strong> {selected.potencia_red_movil} dBm</p>
+            <p className="text-sm text-slate-600"><strong>Señal:</strong> {signalLabel(selected.potencia_red_movil)} ({selected.potencia_red_movil} dBm)</p>
             <p className="text-sm text-slate-600"><strong>Mesh:</strong> {selected.coneccion_mesh ? 'Sí' : 'No'}</p>
             <p className="text-sm text-slate-600"><strong>Ubicación:</strong> {selected.lat.toFixed(5)}, {selected.long.toFixed(5)}</p>
             <p className="text-sm text-slate-600 mt-2 line-clamp-3" title={address}><strong>Dirección:</strong> {address}</p>
@@ -58,9 +58,10 @@ export default function MapTab({ afectados, city }: Props) {
 
       <div className="flex flex-wrap gap-4 mt-4 text-sm text-slate-600">
         {[
-          { label: 'Señal baja (< -85 dBm)', color: '#dc3545' },
-          { label: 'Señal media (< -75 dBm)', color: '#ffc107' },
-          { label: 'Señal buena', color: '#28a745' },
+          { label: 'Muy baja (< -100)', color: '#dc3545' },
+          { label: 'Baja (-100 a -85)', color: '#fd7e14' },
+          { label: 'Media (-85 a -70)', color: '#ffc107' },
+          { label: 'Optima (> -70)', color: '#28a745' },
         ].map(item => (
           <div key={item.label} className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full border border-white shadow" style={{ backgroundColor: item.color }} />
@@ -80,7 +81,15 @@ function getCenter(afectados: Afectado[]): [number, number] {
 }
 
 function signalColor(potencia: number): string {
-  if (potencia < -85) return '#dc3545';
-  if (potencia < -75) return '#ffc107';
+  if (potencia < -100) return '#dc3545';
+  if (potencia < -85) return '#fd7e14';
+  if (potencia < -70) return '#ffc107';
   return '#28a745';
+}
+
+function signalLabel(potencia: number): string {
+  if (potencia < -100) return 'Muy baja';
+  if (potencia < -85) return 'Baja';
+  if (potencia < -70) return 'Media';
+  return 'Optima';
 }

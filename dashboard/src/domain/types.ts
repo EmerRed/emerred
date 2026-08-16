@@ -21,5 +21,5 @@ export interface ActiveAlert {
 export interface Stats {
   total: number;
   conMesh: number;
-  potenciaBaja: number;
+  muyBaja: number;
 }

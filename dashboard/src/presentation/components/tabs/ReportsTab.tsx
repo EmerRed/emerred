@@ -13,7 +13,7 @@ export default function ReportsTab({ afectados }: Props) {
           <thead className="text-slate-500 border-b">
             <tr>
               <th className="py-2 pr-4">Celular</th>
-              <th className="py-2 pr-4">Señal móvil</th>
+              <th className="py-2 pr-4">Calidad señal</th>
               <th className="py-2 pr-4">Mesh</th>
               <th className="py-2 pr-4">Latitud</th>
               <th className="py-2 pr-4">Longitud</th>
@@ -24,7 +24,11 @@ export default function ReportsTab({ afectados }: Props) {
             {afectados.map(a => (
               <tr key={a.id} className="border-b last:border-0">
                 <td className="py-2 pr-4">{a.numero_celular}</td>
-                <td className="py-2 pr-4">{a.potencia_red_movil} dBm</td>
+                <td className="py-2 pr-4">
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${signalClass(a.potencia_red_movil)}`}>
+                    {signalLabel(a.potencia_red_movil)} ({a.potencia_red_movil} dBm)
+                  </span>
+                </td>
                 <td className="py-2 pr-4">
                   <span
                     className={`px-2 py-1 rounded text-xs font-bold ${
@@ -44,4 +48,18 @@ export default function ReportsTab({ afectados }: Props) {
       </div>
     </div>
   );
+}
+
+function signalClass(potencia: number): string {
+  if (potencia < -100) return 'bg-red-100 text-red-800';
+  if (potencia < -85) return 'bg-orange-100 text-orange-800';
+  if (potencia < -70) return 'bg-yellow-100 text-yellow-800';
+  return 'bg-green-100 text-green-800';
+}
+
+function signalLabel(potencia: number): string {
+  if (potencia < -100) return 'Muy baja';
+  if (potencia < -85) return 'Baja';
+  if (potencia < -70) return 'Media';
+  return 'Optima';
 }

@@ -35,12 +35,12 @@ export async function getActiveAlerts(): Promise<ActiveAlert[]> {
 function computeStats(afectados: Afectado[]): Stats {
   const total = afectados.length;
   const conMesh = afectados.filter(a => a.coneccion_mesh).length;
-  const potenciaBaja = afectados.filter(a => a.potencia_red_movil < -85).length;
-  return { total, conMesh, potenciaBaja };
+  const muyBaja = afectados.filter(a => a.potencia_red_movil < -100).length;
+  return { total, conMesh, muyBaja };
 }
 
 export async function getStats(): Promise<Stats> {
-  return { total: 0, conMesh: 0, potenciaBaja: 0 };
+  return { total: 0, conMesh: 0, muyBaja: 0 };
 }
 
 export async function refreshStats(afectados: Afectado[]): Promise<Stats> {
