@@ -92,7 +92,7 @@ bun run preview
 - **Actualización en tiempo real** por SSE cuando se crea un afectado.
 - **Tabs**: Resumen, Alertas, Mapa, Reportes.
 - **Resumen**: estadísticas, calidad de señal móvil y conexión mesh.
-- **Alertas**: emitir nuevas alertas y ver alertas activas.
+- **Alertas**: activar alarma de emergencia vía `POST /alarma/activar` (difunde por WebSocket a dispositivos móviles conectados).
 - **Mapa**: pines agrupados por ubicación con color según promedio de señal.
 - **Reportes**: tabla de afectados y puntos agrupados con listado completo de celulares.
 - **Auto-cierre de sesión** tras 10 minutos de inactividad.

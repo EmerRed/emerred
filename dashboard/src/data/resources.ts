@@ -1,11 +1,10 @@
-import { getAfectados, getActiveAlerts } from '@/data/api';
+import { getAfectados } from '@/data/api';
 import { aggregateByLocation } from '@/data/aggregation';
-import type { Afectado, PuntoAfectado, ActiveAlert, Stats } from '@/domain/types';
+import type { Afectado, PuntoAfectado, Stats } from '@/domain/types';
 
 export interface DashboardData {
   afectados: Afectado[];
   puntos: PuntoAfectado[];
-  alerts: ActiveAlert[];
   stats: Stats;
 }
 
@@ -16,12 +15,9 @@ function computeStats(afectados: Afectado[]): Stats {
   return { total, conMesh, muyBaja };
 }
 
-export function buildDashboardData(
-  afectados: Afectado[],
-  alerts: ActiveAlert[]
-): DashboardData {
+export function buildDashboardData(afectados: Afectado[]): DashboardData {
   const puntos = aggregateByLocation(afectados);
-  return { afectados, puntos, alerts, stats: computeStats(afectados) };
+  return { afectados, puntos, stats: computeStats(afectados) };
 }
 
 export function appendAfectado(
@@ -34,8 +30,8 @@ export function appendAfectado(
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const [afectados, alerts] = await Promise.all([getAfectados(), getActiveAlerts()]);
-  return buildDashboardData(afectados, alerts);
+  const afectados = await getAfectados();
+  return buildDashboardData(afectados);
 }
 
 export async function refreshDashboardData(): Promise<DashboardData> {

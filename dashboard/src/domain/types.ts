@@ -25,7 +25,8 @@ export interface ActiveAlert {
   tipo: string;
   mensaje: string;
   ciudad?: string;
-  radio?: number;
+  dispositivosAlcanzados?: number;
+  createdAt?: string;
 }
 
 export interface Stats {

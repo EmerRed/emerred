@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, LogOut, Globe } from 'lucide-react';
-import { broadcastAlert } from '@/data/api';
+import { activarAlarma } from '@/data/api';
 import { subscribeToAfectadosUpdates } from '@/data/sse';
-import { getDashboardData, refreshDashboardData, appendAfectado, type DashboardData } from '@/data/resources';
+import { getDashboardData, appendAfectado, type DashboardData } from '@/data/resources';
 import { useIdleTimeout } from '@/presentation/hooks/useIdleTimeout';
 import SkeletonDashboard from '@/presentation/components/ui/SkeletonDashboard';
 import OverviewTab from '@/presentation/components/tabs/OverviewTab';
 import AlertsTab from '@/presentation/components/tabs/AlertsTab';
 import MapTab from '@/presentation/components/tabs/MapTab';
 import ReportsTab from '@/presentation/components/tabs/ReportsTab';
-import type { Afectado } from '@/domain/types';
+import type { Afectado, ActiveAlert } from '@/domain/types';
 
 const TABS = [
   { id: 'overview', label: 'Resumen' },
@@ -28,6 +28,9 @@ export default function Dashboard({ onLogout, onBackToPublic }: Props) {
 
   const [data, setData] = useState<DashboardData | null>(null);
   const [activeTab, setActiveTab] = useState<string>('overview');
+  const [historialAlarmas, setHistorialAlarmas] = useState<ActiveAlert[]>([]);
+
+  const city = 'Cali';
 
   useEffect(() => {
     let mounted = true;
@@ -47,12 +50,21 @@ export default function Dashboard({ onLogout, onBackToPublic }: Props) {
     return <SkeletonDashboard />;
   }
 
-  const city = data.alerts[0]?.ciudad ?? 'Cali';
-
-  async function handleBroadcast(tipo: string, mensaje: string) {
-    await broadcastAlert({ active: true, tipo, mensaje, ciudad: city, radio: 5000 });
-    const fresh = await refreshDashboardData();
-    setData(fresh);
+  async function handleActivarAlarma(tipo: string, mensaje: string) {
+    const result = await activarAlarma();
+    setHistorialAlarmas(prev => [
+      {
+        id: `alarma-${Date.now()}`,
+        active: true,
+        tipo,
+        mensaje,
+        ciudad: city,
+        dispositivosAlcanzados: result.dispositivosAlcanzados,
+        createdAt: result.timestamp,
+      },
+      ...prev,
+    ]);
+    return result;
   }
 
   return (
@@ -118,7 +130,9 @@ export default function Dashboard({ onLogout, onBackToPublic }: Props) {
 
       <div className="bg-white rounded-b-2xl shadow-sm border border-slate-200 p-5 min-h-[400px]">
         {activeTab === 'overview' && <OverviewTab data={data} />}
-        {activeTab === 'alerts' && <AlertsTab alerts={data.alerts} city={city} onBroadcast={handleBroadcast} />}
+        {activeTab === 'alerts' && (
+          <AlertsTab city={city} historial={historialAlarmas} onActivar={handleActivarAlarma} />
+        )}
         {activeTab === 'map' && <MapTab puntos={data.puntos} city={city} />}
         {activeTab === 'reports' && <ReportsTab afectados={data.afectados} puntos={data.puntos} />}
       </div>
