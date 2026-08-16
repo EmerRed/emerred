@@ -1,8 +1,10 @@
 const Afectado = require('../models/Afectado');
+const { broadcast } = require('../config/sse');
 
 const createAfectado = async (req, res, next) => {
   try {
     const afectado = await Afectado.create(req.body);
+    broadcast('nuevo-afectado', afectado);
     res.status(201).json({
       success: true,
       message: 'Afectado creado exitosamente',
