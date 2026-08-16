@@ -19,8 +19,12 @@ const options = {
     },
     servers: [
       {
+        url: 'https://emerred-production.up.railway.app',
+        description: 'Producción (Railway)'
+      },
+      {
         url: 'http://localhost:3000',
-        description: 'Servidor de desarrollo'
+        description: 'Desarrollo local'
       }
     ],
     tags: [
