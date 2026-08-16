@@ -70,6 +70,23 @@ router.post('/', validateAfectado, createAfectado);
  *         description: Error interno del servidor
  */
 router.get('/', getAllAfectados);
+
+/**
+ * @swagger
+ * /afectados/sse:
+ *   get:
+ *     summary: Conexión SSE para nuevos afectados en tiempo real
+ *     tags: [Afectados]
+ *     description: Abre un stream Server-Sent Events. Cada vez que se crea un afectado, se emite el evento `nuevo-afectado`.
+ *     responses:
+ *       200:
+ *         description: Stream de eventos `nuevo-afectado`
+ *         content:
+ *           text/event-stream:
+ *             schema:
+ *               type: string
+ *               example: "event: nuevo-afectado\ndata: {}\n\n"
+ */
 router.get('/sse', handleSSE);
 
 /**
