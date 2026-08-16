@@ -1,6 +1,7 @@
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { AlertTriangle, LogOut } from 'lucide-react';
 import { broadcastAlert } from '@/data/api';
+import { subscribeToAfectadosUpdates } from '@/data/sse';
 import { getDashboardData, refreshDashboardData } from '@/data/resources';
 import { useIdleTimeout } from '@/presentation/hooks/useIdleTimeout';
 import OverviewTab from '@/presentation/components/tabs/OverviewTab';
@@ -24,6 +25,12 @@ export default function Dashboard({ onLogout }: Props) {
 
   const [dataPromise, setDataPromise] = useState(() => getDashboardData());
   const data = use(dataPromise);
+
+  useEffect(() => {
+    return subscribeToAfectadosUpdates(() => {
+      setDataPromise(refreshDashboardData());
+    });
+  }, []);
   const [activeTab, setActiveTab] = useState<string>('overview');
 
   const city = data.alerts[0]?.ciudad ?? 'Bogotá';

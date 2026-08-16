@@ -1,7 +1,7 @@
 import { getAuthToken } from './auth';
 import type { Afectado, ActiveAlert } from '@/domain/types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://emerred-production.up.railway.app';
+export const API_BASE = import.meta.env.VITE_API_URL || 'https://emerred-production.up.railway.app';
 
 let MOCK_ALERTS: ActiveAlert[] = [
   {

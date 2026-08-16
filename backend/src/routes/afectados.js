@@ -9,6 +9,7 @@ const {
   deleteAfectado
 } = require('../controllers/afectadoController');
 const { validateAfectado, validateIdParam, validateCelularParam } = require('../middlewares/validation');
+const { handleSSE } = require('../config/sse');
 
 /**
  * @swagger
@@ -69,6 +70,7 @@ router.post('/', validateAfectado, createAfectado);
  *         description: Error interno del servidor
  */
 router.get('/', getAllAfectados);
+router.get('/sse', handleSSE);
 
 /**
  * @swagger
